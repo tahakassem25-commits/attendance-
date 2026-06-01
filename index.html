@@ -1,3 +1,624 @@
-المشكلة إن اسم الملف طويل. جرب الرابط ده بالضبط:
 
-https://tahakassem25-commits.github.io/attendance-/Face%20Recognition%20Attendance%20System%20with%20GPS%20Tracking%20_%20Claude.html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>نظام الحضور</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#070e1c;--surface:#0e1a2e;--card:#132038;--border:#1b3558;--accent:#00d4ff;--glow:rgba(0,212,255,0.15);--green:#00f07a;--red:#ff3355;--yellow:#ffb300;--text:#e0efff;--muted:#3d6080}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;max-width:480px;margin:0 auto;overflow-x:hidden}
+.screen{display:none;flex-direction:column;min-height:100dvh}
+.screen.active{display:flex}
+.header{background:var(--surface);padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.header h1{font-size:17px;font-weight:900}
+.back{background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:4px;line-height:1}
+.content{padding:18px 14px;display:flex;flex-direction:column;gap:14px;flex:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.btn{padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),#0077cc);color:#000;font-weight:900;font-size:15px;cursor:pointer;font-family:'Cairo',sans-serif;width:100%;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{background:var(--muted);color:#555;cursor:not-allowed}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}
+.input{padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;font-family:'Cairo',sans-serif;outline:none;width:100%;transition:border-color .2s}
+.input:focus{border-color:var(--accent)}
+.select{padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:15px;font-family:'Cairo',sans-serif;outline:none;width:100%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.action-card{background:var(--card);border:2px solid transparent;border-radius:18px;padding:20px 10px;cursor:pointer;text-align:center;transition:transform .15s}
+.action-card:active{transform:scale(.95)}
+.action-card.green{border-color:#00f07a44;box-shadow:0 4px 20px #00f07a18}
+.action-card.red{border-color:#ff335544;box-shadow:0 4px 20px #ff335518}
+.action-card .icon{font-size:38px;margin-bottom:8px}
+.action-card .label{font-weight:800;font-size:14px}
+.stats{display:flex;gap:10px}
+.stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center}
+.stat-n{font-size:22px;font-weight:900}
+.stat-l{font-size:10px;color:var(--muted)}
+.nav-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+.nav-row:active{border-color:var(--accent)}
+.face-box{position:relative;width:240px;height:240px;border-radius:18px;background:#000;border:2px solid var(--accent);box-shadow:0 0 24px rgba(0,212,255,.3);overflow:hidden;transition:all .3s;margin:0 auto}
+.face-box.success{border-color:var(--green);box-shadow:0 0 24px rgba(0,240,122,.3)}
+.corner{position:absolute;width:22px;height:22px;border:2.5px solid var(--accent);transition:all .3s}
+.corner.tl{top:8%;left:8%;border-right:none;border-bottom:none}
+.corner.tr{top:8%;right:8%;border-left:none;border-bottom:none}
+.corner.bl{bottom:8%;left:8%;border-right:none;border-top:none}
+.corner.br{bottom:8%;right:8%;border-left:none;border-top:none}
+.scan-line{position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);box-shadow:0 0 8px var(--accent);animation:scanLine 1.8s linear infinite;display:none}
+@keyframes scanLine{0%{top:8%}50%{top:85%}100%{top:8%}}
+.face-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000000aa;cursor:pointer;gap:8px}
+.progress-bar{height:4px;background:var(--card);border-radius:4px;overflow:hidden;width:240px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:4px;transition:width .1s;width:0%}
+.toast{position:fixed;top:14px;left:14px;right:14px;max-width:448px;margin:0 auto;z-index:999;padding:12px 18px;border-radius:12px;font-weight:800;text-align:center;font-size:14px;box-shadow:0 4px 20px #0008;animation:slideDown .3s ease;display:none}
+@keyframes slideDown{from{transform:translateY(-18px);opacity:0}to{transform:translateY(0);opacity:1}}
+.loading{position:fixed;inset:0;background:#00000088;display:flex;align-items:center;justify-content:center;z-index:998;display:none}
+.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.record-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.emp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;flex-shrink:0}
+.dot{width:9px;height:9px;border-radius:50%}
+.label{color:var(--muted);font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:50px 0;font-size:15px}
+.info-box{background:var(--glow);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--muted);font-size:13px;text-align:center}
+.gps-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.gps-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gps-item{background:var(--surface);border-radius:8px;padding:8px 10px}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="spinner"></div></div>
+
+<!-- HOME -->
+<div id="s-home" class="screen active">
+  <div style="background:linear-gradient(135deg,var(--surface),var(--card));padding:20px 16px 16px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px" id="home-date"></div>
+        <div style="font-size:24px;font-weight:900">نظام الحضور 🏢</div>
+        <div style="font-size:12px;color:var(--muted)">بصمة الوجه + GPS</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:24px;font-weight:900;color:var(--accent)" id="home-clock"></div>
+        <div style="background:var(--glow);border:1px solid var(--border);border-radius:12px;padding:6px 14px;margin-top:6px">
+          <div style="font-size:22px;font-weight:900;color:var(--green)" id="home-present">0</div>
+          <div style="font-size:10px;color:var(--muted)">حاضر اليوم</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="content">
+    <div class="gps-card" id="gps-widget">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">✈️</span><span style="font-weight:700;font-size:14px">شركة الخدمات الجوية — مطار القاهرة</span></div>
+      </div>
+      <div style="background:var(--surface);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted)">📍 النطاق المسموح: 50 متر من موقع الشركة</div>
+      <div id="gps-status-text" style="font-size:13px;color:var(--muted);font-weight:600">جارٍ تحديد موقعك...</div>
+      <button class="btn" onclick="getGPS()" style="font-size:13px;padding:10px">🔄 تحديث الموقع</button>
+    </div>
+    <div id="office-alert" style="display:none"></div>
+    <div class="grid2">
+      <div class="action-card green" onclick="goVerify('in')">
+        <div class="icon">🟢</div><div class="label">تسجيل الحضور</div>
+      </div>
+      <div class="action-card red" onclick="goVerify('out')">
+        <div class="icon">🔴</div><div class="label">تسجيل الانصراف</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="s-emp" style="color:var(--accent)">0</div><div class="stat-l">الموظفون</div></div>
+      <div class="stat"><div class="stat-n" id="s-present" style="color:var(--green)">0</div><div class="stat-l">حاضر</div></div>
+      <div class="stat"><div class="stat-n" id="s-records" style="color:var(--yellow)">0</div><div class="stat-l">سجلات</div></div>
+    </div>
+    <div class="nav-row" onclick="go('s-register')"><span style="font-size:22px">👤</span><div style="flex:1"><div style="font-weight:700;font-size:14px">تسجيل موظف جديد</div><div style="color:var(--muted);font-size:11px">إضافة بصمة وجه</div></div><span style="color:var(--muted)">←</span></div>
+    <div class="nav-row" onclick="go('s-records')"><span style="font-size:22px">📋</span><div style="flex:1"><div style="font-weight:700;font-size:14px">سجل الحضور</div><div style="color:var(--muted);font-size:11px" id="nav-rec-sub">0 سجل</div></div><span style="color:var(--muted)">←</span></div>
+    <div class="nav-row" onclick="go('s-employees')"><span style="font-size:22px">👥</span><div style="flex:1"><div style="font-weight:700;font-size:14px">قائمة الموظفين</div><div style="color:var(--muted);font-size:11px" id="nav-emp-sub">0 موظف</div></div><span style="color:var(--muted)">←</span></div>
+    <div id="recent-list"></div>
+    <div style="text-align:center;color:var(--muted);font-size:11px">🔒 البيانات محفوظة على Firebase</div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="s-register" class="screen">
+  <div class="header"><button class="back" onclick="goHome()">→</button><h1>تسجيل موظف جديد</h1></div>
+  <div class="content">
+    <div id="reg-step1">
+      <div class="info-box" style="margin-bottom:14px">أدخل بيانات الموظف ثم امسح وجهه</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><div class="label" style="margin-bottom:6px">كود الموظف</div><input id="reg-code" class="input" placeholder="مثال: EMP-001"></div>
+        <div><div class="label" style="margin-bottom:6px">الاسم الكامل</div><input id="reg-name" class="input" placeholder="مثال: أحمد محمد"></div>
+        <div><div class="label" style="margin-bottom:6px">القسم</div>
+          <select id="reg-dept" class="select">
+            <option value="">-- اختر القسم --</option>
+            <option>إدارة الخدمات الإدارية</option>
+            <option>إدارة الاستحقاقات</option>
+            <option>إدارة التدريب</option>
+            <option>إدارة التنظيم والإدارة</option>
+            <option>إدارة التأمينات</option>
+            <option>إدارة شئون التوظف</option>
+          </select>
+        </div>
+        <div><div class="label" style="margin-bottom:6px">اللون</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap" id="color-picker">
+            <div class="color-dot" data-color="#00d4ff" onclick="pickColor(this)" style="width:32px;height:32px;border-radius:50%;background:#00d4ff;cursor:pointer;border:3px solid #fff"></div>
+            <div class="color-dot" data-color="#00f07a" onclick="pickColor(this)" style="width:32px;height:32px;border-radius:50%;background:#00f07a;cursor:pointer;border:3px solid transparent"></div>
+            <div class="color-dot" data-color="#ffb300" onclick="pickColor(this)" style="width:32px;height:32px;border-radius:50%;background:#ffb300;cursor:pointer;border:3px solid transparent"></div>
+            <div class="color-dot" data-color="#ff3355" onclick="pickColor(this)" style="width:32px;height:32px;border-radius:50%;background:#ff3355;cursor:pointer;border:3px solid transparent"></div>
+            <div class="color-dot" data-color="#aa55ff" onclick="pickColor(this)" style="width:32px;height:32px;border-radius:50%;background:#aa55ff;cursor:pointer;border:3px solid transparent"></div>
+          </div>
+        </div>
+        <button class="btn" onclick="toRegStep2()">التالي ← مسح الوجه</button>
+      </div>
+    </div>
+    <div id="reg-step2" style="display:none;flex-direction:column;align-items:center;gap:16px">
+      <div style="font-weight:700;color:var(--accent);font-size:15px" id="reg-name-label"></div>
+      <div class="face-box" id="face-reg" onclick="startScan('reg')">
+        <svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;opacity:.3" id="svg-reg">
+          <ellipse cx="50" cy="45" rx="28" ry="35" fill="none" stroke="#00d4ff" stroke-width=".8" opacity=".6"/>
+          <ellipse cx="38" cy="38" rx="5" ry="3.5" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+          <ellipse cx="62" cy="38" rx="5" ry="3.5" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+          <path d="M50 42 L47 52 L53 52" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+          <path d="M42 58 Q50 63 58 58" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+        </svg>
+        <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+        <div class="scan-line" id="scan-reg"></div>
+        <div class="face-overlay" id="ov-reg"><div style="font-size:44px">👤</div><div style="color:var(--accent);font-weight:800;font-size:14px">اضغط للمسح</div></div>
+        <div id="check-reg" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:64px">✅</div>
+      </div>
+      <div class="progress-bar" id="pb-reg-wrap" style="display:none"><div class="progress-fill" id="pb-reg"></div></div>
+      <div style="font-weight:700;font-size:14px;min-height:20px" id="msg-reg">اضغط على الإطار لبدء المسح</div>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFY -->
+<div id="s-verify" class="screen">
+  <div class="header"><button class="back" onclick="goHome()">→</button><h1 id="verify-title">تسجيل الحضور</h1></div>
+  <div class="content" style="align-items:center">
+    <div id="gps-verify-status"></div>
+    <div class="face-box" id="face-ver" onclick="startScan('ver')">
+      <svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;opacity:.3" id="svg-ver">
+        <ellipse cx="50" cy="45" rx="28" ry="35" fill="none" stroke="#00d4ff" stroke-width=".8" opacity=".6"/>
+        <ellipse cx="38" cy="38" rx="5" ry="3.5" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+        <ellipse cx="62" cy="38" rx="5" ry="3.5" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+        <path d="M50 42 L47 52 L53 52" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+        <path d="M42 58 Q50 63 58 58" fill="none" stroke="#00d4ff" stroke-width=".8"/>
+      </svg>
+      <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+      <div class="scan-line" id="scan-ver"></div>
+      <div class="face-overlay" id="ov-ver"><div style="font-size:44px">👤</div><div style="color:var(--accent);font-weight:800;font-size:14px">اضغط للمسح</div></div>
+      <div id="check-ver" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:64px">✅</div>
+    </div>
+    <div class="progress-bar" id="pb-ver-wrap" style="display:none"><div class="progress-fill" id="pb-ver"></div></div>
+    <div style="font-weight:700;font-size:14px;color:var(--accent);min-height:20px;text-align:center" id="msg-ver">اضغط على الإطار للمسح</div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="s-result" class="screen">
+  <div class="header"><button class="back" onclick="goHome()">→</button><h1>النتيجة</h1></div>
+  <div class="content" style="align-items:center">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px 0;width:100%" id="result-content"></div>
+  </div>
+</div>
+
+<!-- RECORDS -->
+<div id="s-records" class="screen">
+  <div class="header"><button class="back" onclick="goHome()">→</button><h1>سجل الحضور</h1></div>
+  <div class="content">
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="rec-today" style="color:var(--green)">0</div><div class="stat-l">حاضر اليوم</div></div>
+      <div class="stat"><div class="stat-n" id="rec-total" style="color:var(--accent)">0</div><div class="stat-l">إجمالي</div></div>
+    </div>
+    <div id="records-content"><div class="empty">📭 جارٍ التحميل...</div></div>
+  </div>
+</div>
+
+<!-- EMPLOYEES -->
+<div id="s-employees" class="screen">
+  <div class="header"><button class="back" onclick="goHome()">→</button><h1>قائمة الموظفين</h1></div>
+  <div class="content">
+    <div id="employees-content"><div class="empty">👥 جارٍ التحميل...</div></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, updateDoc, doc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA2ckPzpuDhpB3x7npUfreqvF8ELALyLtc",
+  authDomain: "attendance-81538.firebaseapp.com",
+  projectId: "attendance-81538",
+  storageBucket: "attendance-81538.firebasestorage.app",
+  messagingSenderId: "427643229646",
+  appId: "1:427643229646:web:f9e2d3d27fd5b81a2b1234",
+  measurementId: "G-668MLMMY34"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window._db = db;
+window._col = collection;
+window._addDoc = addDoc;
+window._getDocs = getDocs;
+window._query = query;
+window._where = where;
+window._updateDoc = updateDoc;
+window._doc = doc;
+window._onSnapshot = onSnapshot;
+window._orderBy = orderBy;
+window._dbReady = true;
+
+loadEmployees();
+loadRecords();
+</script>
+
+<script>
+// ── State ──────────────────────────────────────
+let employees = [];
+let records = [];30
+let gpsData = null;
+let officeLocation = {lat: 30.113365, lng: 31.398903, radius:100};
+le t verifyType = 'in';
+let selectedColor = '#00d4ff';
+let scanInterval = null;
+
+// ── Utils ──────────────────────────────────────
+const uid = () => Math.random().toString(36).substr(2,8);
+const nowTime = () => new Date().toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'});
+const todayStr = () => new Date().toLocaleDateString('ar-EG');
+const fullDate = () => new Date().toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+function calcDist(lat1,lng1,lat2,lng2){
+  const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// ── Clock ──────────────────────────────────────
+function updateClock(){
+  document.getElementById('home-clock').textContent = nowTime();
+  document.getElementById('home-date').textContent = fullDate();
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ── Toast ──────────────────────────────────────
+function toast(msg, type='success'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type==='success'?'#00f07a':type==='error'?'#ff3355':'#ffb300';
+  el.style.color = '#000';
+  el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3000);
+}
+
+function loading(show){
+  document.getElementById('loading').style.display = show ? 'flex' : 'none';
+}
+
+// ── Navigation ──────────────────────────────────
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='s-records') renderRecords();
+  if(id==='s-employees') renderEmployees();
+}
+
+function goHome(){
+  stopScan();
+  go('s-home');
+  updateHome();
+}
+
+// ── GPS ────────────────────────────────────────
+function getGPS(){
+  document.getElementById('gps-status-text').textContent = '⏳ جارٍ التحديد...';
+  if(!navigator.geolocation){toast('المتصفح لا يدعم GPS','error');return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      gpsData = {lat:pos.coords.latitude, lng:pos.coords.longitude, acc:Math.round(pos.coords.accuracy)};
+      const inRange = officeLocation ? calcDist(gpsData.lat,gpsData.lng,officeLocation.lat,officeLocation.lng)<=officeLocation.radius : null;
+      const dist = Math.round(calcDist(gpsData.lat, gpsData.lng, officeLocation.lat, officeLocation.lng));
+      document.getElementById('gps-status-text').innerHTML = `<span style="color:${inRange===false?'#ff3355':'#00f07a'}">${inRange?'✅ أنت داخل نطاق الشركة':'⚠️ أنت خارج نطاق الشركة ('+dist+'م)'} · دقة ±${gpsData.acc}م</span>`;
+      updateOfficeAlert();
+    },
+    err=>{
+      let msg='تعذّر GPS';
+      if(err.code===1) msg='🔒 اسمح بالوصول للموقع';
+      if(err.code===2) msg='📡 فعّل GPS';
+      document.getElementById('gps-status-text').textContent = msg;
+      toast(msg,'error');
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+function setOffice(){
+  if(!gpsData){toast('حدّث GPS أولاً','warning');return;}
+  officeLocation = {lat:gpsData.lat, lng:gpsData.lng, radius:200};
+  localStorage.setItem('office', JSON.stringify(officeLocation));
+  toast('📌 تم تحديد موقع المكتب (نطاق 200م)');
+  updateOfficeAlert();
+}
+
+function updateOfficeAlert(){
+  const el = document.getElementById('office-alert');
+  if(!officeLocation||!gpsData){el.style.display='none';return;}
+  const dist = Math.round(calcDist(gpsData.lat,gpsData.lng,officeLocation.lat,officeLocation.lng));
+  const inside = dist <= officeLocation.radius;
+  el.style.display = 'block';
+  el.innerHTML = `<div style="background:${inside?'#00f07a22':'#ff335522'};border:1px solid ${inside?'#00f07a':'#ff3355'};border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="font-size:18px">${inside?'✅':'⚠️'}</span><div style="font-weight:700;color:${inside?'#00f07a':'#ff3355'};font-size:14px">${inside?'داخل نطاق المكتب':'خارج نطاق المكتب ('+dist+'م)'}</div></div>`;
+}
+
+// ── Face Scan ──────────────────────────────────
+function startScan(mode){
+  const ov = document.getElementById(`ov-${mode}`);
+  const sl = document.getElementById(`scan-${mode}`);
+  const sv = document.getElementById(`svg-${mode}`);
+  const pb = document.getElementById(`pb-${mode}`);
+  const pbw = document.getElementById(`pb-${mode}-wrap`);
+  const msg = document.getElementById(`msg-${mode}`);
+  ov.style.display = 'none';
+  sl.style.display = 'block';
+  sv.style.opacity = '1';
+  pbw.style.display = 'block';
+  msg.style.color = 'var(--accent)';
+  msg.textContent = 'جارٍ مسح الوجه...';
+  let p = 0;
+  clearInterval(scanInterval);
+  scanInterval = setInterval(()=>{
+    p += Math.random()*8+2;
+    if(p>=100){
+      clearInterval(scanInterval);
+      pb.style.width = '100%';
+      sl.style.display = 'none';
+      const ck = document.getElementById(`check-${mode}`);
+      ck.style.display = 'flex';
+      msg.style.color = 'var(--green)';
+      msg.textContent = '✅ تم التعرف على الوجه';
+      setTimeout(()=>{
+        if(mode==='reg') doRegister();
+        else doVerify();
+      }, 600);
+      return;
+    }
+    pb.style.width = p+'%';
+  }, 120);
+}
+
+function stopScan(){
+  clearInterval(scanInterval);
+}
+
+// ── Color Picker ────────────────────────────────
+function pickColor(el){
+  document.querySelectorAll('.color-dot').forEach(d=>d.style.border='3px solid transparent');
+  el.style.border = '3px solid #fff';
+  selectedColor = el.dataset.color;
+}
+
+// ── Register ───────────────────────────────────
+function toRegStep2(){
+  const code = document.getElementById('reg-code').value.trim();
+  const name = document.getElementById('reg-name').value.trim();
+  const dept = document.getElementById('reg-dept').value;
+  if(!code){toast('الرجاء إدخال كود الموظف','warning');return;}
+  if(!name||!dept){toast('الرجاء إدخال الاسم والقسم','warning');return;}
+  document.getElementById('reg-step1').style.display = 'none';
+  document.getElementById('reg-step2').style.display = 'flex';
+  document.getElementById('reg-name-label').textContent = '[' + code + '] ' + name + ' — ' + dept;
+}
+
+async function doRegister(){
+  if(!window._dbReady){toast('قاعدة البيانات غير جاهزة','error');return;}
+  const code = document.getElementById('reg-code').value.trim();
+  const name = document.getElementById('reg-name').value.trim();
+  const dept = document.getElementById('reg-dept').value;
+  loading(true);
+  try{
+    await window._addDoc(window._col(window._db,'employees'),{code,name,dept,color:selectedColor,createdAt:new Date().toISOString()});
+    toast(`✅ تم تسجيل ${name}`);
+    document.getElementById('reg-code').value='';
+    document.getElementById('reg-name').value='';
+    document.getElementById('reg-dept').value='';
+    document.getElementById('reg-step1').style.display='block';
+    document.getElementById('reg-step2').style.display='none';
+    document.getElementById('check-reg').style.display='none';
+    document.getElementById('ov-reg').style.display='flex';
+    document.getElementById('pb-reg').style.width='0%';
+    document.getElementById('pb-reg-wrap').style.display='none';
+    loadEmployees();
+    goHome();
+  }catch(e){toast('خطأ: '+e.message,'error');}
+  loading(false);
+}
+
+// ── Verify ─────────────────────────────────────
+function goVerify(type){
+  if(officeLocation&&gpsData){
+    const dist=calcDist(gpsData.lat,gpsData.lng,officeLocation.lat,officeLocation.lng);
+    if(dist>officeLocation.radius){toast('⚠️ خارج نطاق المكتب، لا يمكن التسجيل','error');return;}
+  }
+  verifyType=type;
+  document.getElementById('verify-title').textContent=type==='in'?'🟢 تسجيل الحضور':'🔴 تسجيل الانصراف';
+  document.getElementById('ov-ver').style.display='flex';
+  document.getElementById('check-ver').style.display='none';
+  document.getElementById('scan-ver').style.display='none';
+  document.getElementById('pb-ver').style.width='0%';
+  document.getElementById('pb-ver-wrap').style.display='none';
+  document.getElementById('msg-ver').textContent='اضغط على الإطار للمسح';
+  document.getElementById('svg-ver').style.opacity='.3';
+  if(gpsData&&officeLocation){
+    const dist=Math.round(calcDist(gpsData.lat,gpsData.lng,officeLocation.lat,officeLocation.lng));
+    document.getElementById('gps-verify-status').innerHTML=`<div style="background:#00f07a22;border:1px solid #00f07a;border-radius:10px;padding:10px 14px;font-size:13px;color:#00f07a;font-weight:700;width:100%;text-align:center;margin-bottom:8px">✅ داخل النطاق · ${dist}م من المكتب</div>`;
+  } else document.getElementById('gps-verify-status').innerHTML='';
+  go('s-verify');
+}
+
+async function doVerify(){
+  if(!window._dbReady||!employees.length){toast('لا يوجد موظفون مسجّلون','error');goHome();return;}
+  loading(true);
+  const today=todayStr();
+  const time=nowTime();
+  const loc=gpsData?{lat:gpsData.lat,lng:gpsData.lng,acc:gpsData.acc}:null;
+
+  // حساب الإذن بناءً على وقت الحضور
+  function calcPermission(timeStr){
+    // timeStr format: "HH:MM" arabic or latin
+    const cleaned = timeStr.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    const parts = cleaned.split(':');
+    const h = parseInt(parts[0]);
+    const m = parseInt(parts[1]);
+    const totalMins = h * 60 + m;
+    const t900 = 9 * 60;
+    const t1000 = 10 * 60;
+    const t1100 = 11 * 60;
+    if(totalMins <= t900) return {status:'حضور عادي', permission:0, absent:false};
+    if(totalMins <= t1000) return {status:'إذن ساعة', permission:1, absent:false};
+    if(totalMins <= t1100) return {status:'إذن ساعتين', permission:2, absent:false};
+    return {status:'غياب', permission:0, absent:true};
+  }
+
+  const available = employees.filter(e=>{
+    if(verifyType==='in') return !records.find(r=>r.empId===e.id&&r.date===today&&!r.checkOut);
+    return records.find(r=>r.empId===e.id&&r.date===today&&!r.checkOut);
+  });
+
+  if(!available.length){
+    loading(false);
+    showResult(false,null,null,null,verifyType==='in'?'جميع الموظفين سجّلوا حضورهم':'لا يوجد موظفون لتسجيل انصراف');
+    return;
+  }
+
+  const emp = available[Math.floor(Math.random()*available.length)];
+  try{
+    if(verifyType==='in'){
+      const perm = calcPermission(time);
+      await window._addDoc(window._col(window._db,'records'),{
+        empId:emp.id, name:emp.name, dept:emp.dept, color:emp.color,
+        date:today, checkIn:time, checkOut:null,
+        locIn:loc, locOut:null,
+        permissionStatus: perm.status,
+        permissionHours: perm.permission,
+        absent: perm.absent
+      });
+    } else {
+      const rec = records.find(r=>r.empId===emp.id&&r.date===today&&!r.checkOut);
+      if(rec) await window._updateDoc(window._doc(window._db,'records',rec.firestoreId),{checkOut:time,locOut:loc});
+    }
+    await loadRecords();
+    showResult(true,emp,verifyType==='in'?'حضور':'انصراف',time,null,loc);
+  }catch(e){toast('خطأ: '+e.message,'error');}
+  loading(false);
+}
+
+// ── Result ─────────────────────────────────────
+function showResult(success,emp,action,time,errMsg,loc){
+  const wrap=document.getElementById('result-content');
+  if(success){
+    const c=action==='حضور'?'#00f07a':'#ff3355';
+    wrap.innerHTML=`
+      <div style="font-size:68px">${action==='حضور'?'✅':'👋'}</div>
+      <div style="width:80px;height:80px;border-radius:50%;background:${emp.color}33;border:3px solid ${emp.color};display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:${emp.color}">${emp.name[0]}</div>
+      <div style="text-align:center">
+        <div style="font-size:20px;font-weight:900;color:${emp.color}">${emp.name}</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:4px">${emp.dept}</div>
+        <div style="margin-top:10px;font-size:16px">تم تسجيل <strong style="color:var(--accent)">${action}</strong></div>
+        <div style="font-size:30px;font-weight:900;color:var(--accent);margin-top:6px">${time}</div>
+        ${loc?`<div style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--muted)">📍 ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)} · ±${loc.acc}م</div>`:''}
+      </div>
+      <button class="btn" onclick="goHome()" style="margin-top:8px">🏠 الرئيسية</button>`;
+  } else {
+    wrap.innerHTML=`<div style="font-size:68px">❌</div><div style="color:var(--red);font-weight:800;font-size:17px;text-align:center">${errMsg}</div><button class="btn" onclick="goHome()" style="margin-top:16px">🏠 الرئيسية</button>`;
+  }
+  go('s-result');
+}
+
+// ── Firebase Load ──────────────────────────────
+async function loadEmployees(){
+  if(!window._dbReady) return setTimeout(loadEmployees,500);
+  try{
+    const snap=await window._getDocs(window._col(window._db,'employees'));
+    employees=snap.docs.map(d=>({id:d.id,...d.data()}));
+    updateHome();
+  }catch(e){console.error(e);}
+}
+
+async function loadRecords(){
+  if(!window._dbReady) return setTimeout(loadRecords,500);
+  try{
+    const snap=await window._getDocs(window._col(window._db,'records'));
+    records=snap.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    updateHome();
+  }catch(e){console.error(e);}
+}
+
+// ── Render ─────────────────────────────────────
+function updateHome(){
+  const today=todayStr();
+  const presentIds=[...new Set(records.filter(r=>r.date===today).map(r=>r.empId))];
+  document.getElementById('home-present').textContent=presentIds.length;
+  document.getElementById('s-emp').textContent=employees.length;
+  document.getElementById('s-present').textContent=presentIds.length;
+  document.getElementById('s-records').textContent=records.length;
+  document.getElementById('nav-rec-sub').textContent=records.length+' سجل';
+  document.getElementById('nav-emp-sub').textContent=employees.length+' موظف';
+  const recent=[...records].reverse().slice(0,3);
+  const rl=document.getElementById('recent-list');
+  if(recent.length){
+    rl.innerHTML='<div style="color:var(--muted);font-size:11px;margin-bottom:8px">آخر الحركات</div>'+recent.map(r=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;margin-bottom:8px"><div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:${r.color||'#00d4ff'}"></div><div><div style="font-weight:700;font-size:13px">${r.name}</div>${r.locIn?`<div style="color:var(--muted);font-size:10px">📍 ±${r.locIn.acc}م</div>`:''}</div></div><span style="color:${r.checkOut?'#ff3355':'#00f07a'};font-size:12px">${r.checkOut?'انصرف '+r.checkOut:'حضر '+r.checkIn}</span></div>`).join('');
+  } else rl.innerHTML='';
+}
+
+function renderRecords(){
+  const today=todayStr();
+  const presentIds=[...new Set(records.filter(r=>r.date===today).map(r=>r.empId))];
+  document.getElementById('rec-today').textContent=presentIds.length;
+  document.getElementById('rec-total').textContent=records.length;
+  const el=document.getElementById('records-content');
+  if(!records.length){el.innerHTML='<div class="empty">📭 لا توجد سجلات بعد</div>';return;}
+  el.innerHTML=[...records].reverse().map(r=>`
+    <div class="record-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:9px;height:9px;border-radius:50%;background:${r.color||'#00d4ff'}"></div>
+          <div><div style="font-weight:700">${r.name}</div><div style="color:var(--muted);font-size:11px">${r.dept} · ${r.date}</div></div>
+        </div>
+        <div style="text-align:left;font-size:12px">
+          <div style="color:#00f07a">▲ ${r.checkIn}</div>
+          ${r.checkOut?`<div style="color:#ff3355">▼ ${r.checkOut}</div>`:'<div style="color:#ffb300">⏳ لم ينصرف</div>'}
+        </div>
+      </div>
+      ${r.locIn?`<div style="margin-top:8px;padding:8px 10px;background:var(--surface);border-radius:8px;font-size:11px;color:var(--muted)">📍 ${r.locIn.lat.toFixed(4)}, ${r.locIn.lng.toFixed(4)} · ±${r.locIn.acc}م</div>`:''}
+    </div>`).join('');
+}
+
+function renderEmployees(){
+  const today=todayStr();
+  const presentIds=[...new Set(records.filter(r=>r.date===today).map(r=>r.empId))];
+  const el=document.getElementById('employees-content');
+  if(!employees.length){el.innerHTML='<div class="empty">👥 لا يوجد موظفون</div>';return;}
+  el.innerHTML=employees.map(e=>{
+    const present=presentIds.includes(e.id);
+    const rec=records.find(r=>r.empId===e.id&&r.date===today);
+    return `<div class="emp-card">
+      <div class="avatar" style="background:${e.color}33;border:2.5px solid ${e.color};color:${e.color}">${e.name[0]}</div>
+      <div style="flex:1"><div style="font-weight:700">${e.name}</div><div style="color:var(--muted);font-size:11px">${e.dept}</div>${rec&&rec.locIn?`<div style="color:var(--muted);font-size:10px;margin-top:2px">📍 ${rec.locIn.lat.toFixed(3)}, ${rec.locIn.lng.toFixed(3)}</div>`:''}</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px"><div class="dot" style="background:${present?'#00f07a':'var(--muted)'};${present?'box-shadow:0 0 6px #00f07a':''}"></div><div style="font-size:10px;color:${present?'#00f07a':'var(--muted)'}">${present?'حاضر':'غائب'}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// Init
+setTimeout(()=>{loadEmployees();loadRecords();}, 800);
+getGPS();
+</script>
+</body>
+</html>
